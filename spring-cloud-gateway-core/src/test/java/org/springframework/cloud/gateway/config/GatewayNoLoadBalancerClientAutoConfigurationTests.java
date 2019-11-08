@@ -34,10 +34,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.SocketUtils;
-import org.springframework.web.bind.annotation.RestController;
 
 @RunWith(ModifiedClassPathRunner.class)
-@ClassPathExclusions({ "spring-cloud-netflix-ribbon-*.jar" })
+@ClassPathExclusions({ "spring-cloud-netflix-ribbon-*.jar",
+		"spring-cloud-loadbalancer-*.jar" })
 public class GatewayNoLoadBalancerClientAutoConfigurationTests {
 
 	private static int port;
@@ -50,7 +50,8 @@ public class GatewayNoLoadBalancerClientAutoConfigurationTests {
 	@Test
 	public void noLoadBalancerClientReportsError() {
 		try (ConfigurableApplicationContext context = new SpringApplication(Config.class)
-				.run("--server.port=" + port, "--spring.jmx.enabled=false")) {
+				.run("--server.port=" + port, "--spring.jmx.enabled=false",
+						"--debug=true")) {
 			WebTestClient client = WebTestClient.bindToServer()
 					.baseUrl("http://localhost:" + port).build();
 			client.get().header(HttpHeaders.HOST, "www.lbfail.org").exchange()
@@ -60,7 +61,6 @@ public class GatewayNoLoadBalancerClientAutoConfigurationTests {
 
 	@SpringBootConfiguration
 	@EnableAutoConfiguration
-	@RestController
 	@Import(PermitAllSecurityConfiguration.class)
 	public static class Config {
 

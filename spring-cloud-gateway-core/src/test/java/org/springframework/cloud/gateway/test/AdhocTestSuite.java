@@ -25,6 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.junit.runners.model.Statement;
 
 import org.springframework.cloud.gateway.filter.GatewayMetricsFilterTests;
+import org.springframework.cloud.gateway.filter.factory.RewriteLocationResponseHeaderGatewayFilterFactoryTests;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -63,6 +64,7 @@ import static org.junit.Assume.assumeThat;
 		org.springframework.cloud.gateway.filter.factory.SetPathGatewayFilterFactoryTests.class,
 		org.springframework.cloud.gateway.filter.factory.PrefixPathGatewayFilterFactoryTest.class,
 		org.springframework.cloud.gateway.filter.factory.RewriteResponseHeaderGatewayFilterFactoryUnitTests.class,
+		RewriteLocationResponseHeaderGatewayFilterFactoryTests.class,
 		org.springframework.cloud.gateway.filter.factory.RequestRateLimiterGatewayFilterFactoryTests.class,
 		org.springframework.cloud.gateway.filter.factory.RequestHeaderToRequestUriGatewayFilterFactoryIntegrationTests.class,
 		org.springframework.cloud.gateway.filter.factory.RemoveResponseHeaderGatewayFilterFactoryTests.class,
@@ -108,7 +110,8 @@ import static org.junit.Assume.assumeThat;
 		org.springframework.cloud.gateway.actuate.GatewayControllerEndpointTests.class,
 		org.springframework.cloud.gateway.config.GatewayAutoConfigurationTests.class,
 		org.springframework.cloud.gateway.discovery.DiscoveryClientRouteDefinitionLocatorTests.class,
-		org.springframework.cloud.gateway.discovery.GatewayDiscoveryClientAutoConfigurationTests.class,
+		org.springframework.cloud.gateway.discovery.BlockingGatewayDiscoveryClientAutoConfigurationTests.class,
+		org.springframework.cloud.gateway.discovery.ReactiveGatewayDiscoveryClientAutoConfigurationTests.class,
 		org.springframework.cloud.gateway.discovery.DiscoveryClientRouteDefinitionLocatorIntegrationTests.class,
 		org.springframework.cloud.gateway.support.ShortcutConfigurableTests.class,
 		org.springframework.cloud.gateway.support.ipresolver.XForwardedRemoteAddressResolverTest.class,

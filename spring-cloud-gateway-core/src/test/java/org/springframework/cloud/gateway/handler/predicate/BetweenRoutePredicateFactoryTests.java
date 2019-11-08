@@ -19,11 +19,12 @@ package org.springframework.cloud.gateway.handler.predicate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.function.Predicate;
 
 import org.junit.Test;
 
 import org.springframework.boot.convert.ApplicationConversionService;
-import org.springframework.cloud.gateway.support.ConfigurationUtils;
+import org.springframework.cloud.gateway.support.ConfigurationService;
 import org.springframework.cloud.gateway.support.StringToZonedDateTimeConverter;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -40,12 +41,15 @@ public class BetweenRoutePredicateFactoryTests {
 
 	static <T> T bindConfig(HashMap<String, Object> properties,
 			AbstractRoutePredicateFactory<T> factory) {
-		T config = factory.newConfig();
-
 		ApplicationConversionService conversionService = new ApplicationConversionService();
 		conversionService.addConverter(new StringToZonedDateTimeConverter());
-		ConfigurationUtils.bind(config, properties, "", "myname", null,
-				conversionService);
+		// @formatter:off
+		T config = new ConfigurationService(null, conversionService, null)
+				.with(factory)
+				.name("myname")
+				.normalizedProperties(properties)
+				.bind();
+		// @formatter:on
 		return config;
 	}
 
@@ -158,6 +162,16 @@ public class BetweenRoutePredicateFactoryTests {
 		BetweenRoutePredicateFactory.Config config = bindConfig(map, factory);
 
 		return factory.apply(config).test(getExchange());
+	}
+
+	@Test
+	public void toStringFormat() {
+		BetweenRoutePredicateFactory.Config config = new BetweenRoutePredicateFactory.Config();
+		config.setDatetime1(ZonedDateTime.now());
+		config.setDatetime2(ZonedDateTime.now().plusHours(1));
+		Predicate predicate = new BetweenRoutePredicateFactory().apply(config);
+		assertThat(predicate.toString()).contains(
+				"Between: " + config.getDatetime1() + " and " + config.getDatetime2());
 	}
 
 }

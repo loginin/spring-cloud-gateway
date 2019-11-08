@@ -100,6 +100,16 @@ spring:
         - RewriteResponseHeader=X-Request-Foo, password=[^&]+, password=***
 
       # =====================================
+      - id: rewrite_location_response_header_test
+        uri: ${test.uri}
+        predicates:
+        - Host=**.rewritelocationresponseheader.org
+        - Path=/headers
+        filters:
+        - AddResponseHeader=Location, https://backend.org:443/v1/some/object/id
+        - RewriteLocationResponseHeader
+
+      # =====================================
       - id: forward_test
         uri: forward:/localcontroller
         predicates:
@@ -162,6 +172,52 @@ spring:
         - Host=**.hystrixsuccess.org
         filters:
         - Hystrix=successcmd
+
+      # =====================================
+      - id: sccb_success_test
+        uri: ${test.uri}
+        predicates:
+        - Host=**.sccbsuccess.org
+        filters:
+        - CircuitBreaker=successcmd
+
+        # =====================================
+      - id: sccb_timeout_test
+        uri: ${test.uri}
+        predicates:
+          - Host=**.sccbtimeout.org
+        filters:
+          - CircuitBreaker=timeoutcmd
+
+      # =====================================
+      - id: sccb_failure_test
+        uri: ${test.uri}
+        predicates:
+        - Host=**.sccbfailure.org
+        filters:
+          - CircuitBreaker=failcmd
+
+      # =====================================
+      - id: circuitbreaker_exception_fallback_test
+        uri: ${test.uri}
+        predicates:
+          - Host=**.circuitbreakerexceptionfallback.org
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: fallbackcmd
+              fallbackUri: forward:/circuitbreakerExceptionFallback
+
+      # =====================================
+      - id: circuitbreaker_fallback_test
+        uri: ${test.uri}
+        predicates:
+          - Host=**.circuitbreakerfallback.org
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: fallbackcmd
+              fallbackUri: forward:/circuitbreakerFallbackController
 
       # =====================================
       - id: load_balancer_client_test
@@ -244,14 +300,6 @@ spring:
         - RemoveResponseHeader=X-Request-Foo
 
       # =====================================
-      - id: retry_test
-        uri: ${test.uri}
-        predicates:
-        - Path=/retry
-        filters:
-        - Retry
-
-      # =====================================
       - id: secure_headers_test
         uri: ${test.uri}
         predicates:
@@ -293,9 +341,9 @@ spring:
         - Host=**.setreresponseheader.org
         - Path=/headers
         filters:
-        - AddResponseHeader=X-Request-Foo, Bar1
-        - AddResponseHeader=X-Request-Foo, Bar2
-        - SetResponseHeader=X-Request-Foo, Bar
+        - AddResponseHeader=X-Response-Foo, Bar1
+        - AddResponseHeader=X-Response-Foo, Bar2
+        - SetResponseHeader=X-Response-Foo, Bar
 
       # =====================================
       - id: set_status_int_test
@@ -367,6 +415,19 @@ spring:
         - name: Path
           args:
             pattern: /**
+      # =====================================
+      - id: route_with_metadata
+        uri: ${test.uri}
+        order: 10000
+        predicates:
+          - name: Path
+            args:
+              pattern: /route_with_metadata
+        metadata:
+          optionName: "OptionValue"
+          compositeObject:
+              name: "value"
+          iAmNumber: 1
 
 hystrix.command.successcmd.execution.isolation.thread.timeoutInMilliseconds: 5000
 
@@ -374,3 +435,8 @@ eureka:
   client:
     enabled: false
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

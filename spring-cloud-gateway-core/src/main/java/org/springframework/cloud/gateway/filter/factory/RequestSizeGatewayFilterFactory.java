@@ -16,11 +16,18 @@
 
 package org.springframework.cloud.gateway.filter.factory;
 
+import reactor.core.publisher.Mono;
+
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.util.unit.DataSize;
+import org.springframework.web.server.ServerWebExchange;
+
+import static org.springframework.cloud.gateway.support.GatewayToStringStyler.filterToStringCreator;
 
 /**
  * This filter blocks the request, if the request size is more than the permissible size.
@@ -59,41 +66,61 @@ public class RequestSizeGatewayFilterFactory extends
 	public GatewayFilter apply(
 			RequestSizeGatewayFilterFactory.RequestSizeConfig requestSizeConfig) {
 		requestSizeConfig.validate();
-		return (exchange, chain) -> {
-			ServerHttpRequest request = exchange.getRequest();
-			String contentLength = request.getHeaders().getFirst("content-length");
-			if (!StringUtils.isEmpty(contentLength)) {
-				Long currentRequestSize = Long.valueOf(contentLength);
-				if (currentRequestSize > requestSizeConfig.getMaxSize()) {
-					exchange.getResponse().setStatusCode(HttpStatus.PAYLOAD_TOO_LARGE);
-					exchange.getResponse().getHeaders().add("errorMessage",
-							getErrorMessage(currentRequestSize,
-									requestSizeConfig.getMaxSize()));
-					return exchange.getResponse().setComplete();
+		return new GatewayFilter() {
+			@Override
+			public Mono<Void> filter(ServerWebExchange exchange,
+					GatewayFilterChain chain) {
+				ServerHttpRequest request = exchange.getRequest();
+				String contentLength = request.getHeaders().getFirst("content-length");
+				if (!StringUtils.isEmpty(contentLength)) {
+					Long currentRequestSize = Long.valueOf(contentLength);
+					if (currentRequestSize > requestSizeConfig.getMaxSize().toBytes()) {
+						exchange.getResponse()
+								.setStatusCode(HttpStatus.PAYLOAD_TOO_LARGE);
+						if (!exchange.getResponse().isCommitted()) {
+							exchange.getResponse().getHeaders().add("errorMessage",
+									getErrorMessage(currentRequestSize,
+											requestSizeConfig.getMaxSize().toBytes()));
+						}
+						return exchange.getResponse().setComplete();
+					}
 				}
+				return chain.filter(exchange);
 			}
-			return chain.filter(exchange);
+
+			@Override
+			public String toString() {
+				return filterToStringCreator(RequestSizeGatewayFilterFactory.this)
+						.append("max", requestSizeConfig.getMaxSize()).toString();
+			}
 		};
 	}
 
 	public static class RequestSizeConfig {
 
-		private Long maxSize = 5000000L;
+		// TODO: use boot data size type
+		private DataSize maxSize = DataSize.ofBytes(5000000L);
 
-		public Long getMaxSize() {
+		public DataSize getMaxSize() {
 			return maxSize;
 		}
 
+		@Deprecated
 		public RequestSizeGatewayFilterFactory.RequestSizeConfig setMaxSize(
 				Long maxSize) {
+			return this.setMaxSize(DataSize.ofBytes(maxSize));
+		}
+
+		public RequestSizeGatewayFilterFactory.RequestSizeConfig setMaxSize(
+				DataSize maxSize) {
 			this.maxSize = maxSize;
 			return this;
 		}
 
+		// TODO: use validator annotation
 		public void validate() {
-			Assert.isTrue(this.maxSize != null && this.maxSize > 0,
-					"maxSize must be greater than 0");
-			Assert.isInstanceOf(Long.class, maxSize, "maxSize must be a number");
+			Assert.notNull(this.maxSize, "maxSize may not be null");
+			Assert.isTrue(this.maxSize.toBytes() > 0, "maxSize must be greater than 0");
 		}
 
 	}
