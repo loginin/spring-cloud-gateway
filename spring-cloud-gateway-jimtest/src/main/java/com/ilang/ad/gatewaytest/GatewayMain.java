@@ -1,19 +1,17 @@
-package com.sensetime.ad.gatewaytest;
+package com.ilang.ad.gatewaytest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.ConfigurableApplicationContext;
 
-/**
- *  * @author duanzongliang@sensetime.com  * @date 2019/6/10 14:26  
- */
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class,
-		RedisAutoConfiguration.class, DataSourceAutoConfiguration.class })
+		DataSourceAutoConfiguration.class })
 @EnableConfigurationProperties
+@EnableDiscoveryClient
 public class GatewayMain {
 
 	public static void main(String[] args) throws Exception {

@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: origin_flow_limit
+        uri: lb://hservice
+        predicates:
+        - Host= flowlimit.org
+        filters:
+        - AddResponseHeader=can-see-me, yes
